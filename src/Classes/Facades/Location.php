@@ -2,7 +2,8 @@
 
 namespace Thorazine\Location\Classes\Facades;
 
-use Thorazine\Location\Classes\Curl;
+use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Client;
 use Exception;
 use StdClass;
 use Request;
@@ -51,6 +52,10 @@ class Location
 	 */
 	private $returnLocationData = [];
 
+	/**
+	 * Hold the guzzle client
+	 */
+	private $client;
 
 
 	/**
@@ -86,7 +91,7 @@ class Location
 
 		$this->urlAddPostcode(str_replace(' ', '', $postalData['postal_code']));
 
-		$this->updateResponseWithResults($this->gateway());
+		$this->updateResponseWithResults($this->gateway($this->buildUrl()));
 
 		return $this;
 	}
@@ -105,7 +110,7 @@ class Location
 
 		$this->urlAddAddress($address);
 
-		$this->updateResponseWithResults($this->gateway());
+		$this->updateResponseWithResults($this->gateway($this->buildUrl()));
 
 		return $this;
 	}
@@ -124,7 +129,7 @@ class Location
 
 		$this->urlAddCoordinates($coordinates);
 
-		$this->updateResponseWithResults($this->gateway());
+		$this->updateResponseWithResults($this->gateway($this->buildUrl()));
 
 		return $this;
 	}
@@ -143,13 +148,13 @@ class Location
 
 		$this->url = 'http://ipinfo.io/'.$ip.'/geo';
 
-		$client = new Curl;
-
 		if(in_array($ip, config('location.ip-exceptions'))) {
 			$this->returnLocationData = array_merge($this->returnLocationData, config('location.default-template-localhost'));
 		}
 		else {
-			$response = $this->jsonToArray($client->get($this->url));
+			$client = $this->createClient();
+
+			$response = $this->jsonToArray($this->gateway($this->url));
 
 			list($latitude, $longitude) = explode(',', $response['loc']);
 
@@ -210,15 +215,17 @@ class Location
 	 * Get the data from the gateway
 	 * New gateways (like Guzzle) can be added here and can be chosen from the config
 	 */
-	private function gateway()
+	private function gateway($url)
 	{
-		if(config('location.client') == 'curl') {
-			$client = new Curl;
+		$result = $this->createClient()->get($url);
 
-			return $client->get($this->buildUrl());
+		if($result->getStatusCode() != 200) {
+			throw new Exception('Could not connect');
 		}
 
-		throw new Exception('HTTP client not supported');
+		return $result->getBody()->getContents();
+
+		
 	}
 
 	/**
@@ -392,5 +399,15 @@ class Location
 	{
 		$this->error = null;
 		$this->response = null;
+	}
+
+	/**
+	 * Create a client
+	 * 
+	 * @return void
+	 */
+	private function createClient()
+	{
+		return new Client();
 	}
 }

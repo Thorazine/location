@@ -38,7 +38,7 @@ GOOGLE_KEY=[key]
 ```
 
 > Script will work out of the box without a key, but it has limited requests. 
-> Please look at Google documentation hell to see how what the rate limiting is.
+> Please look at Google documentation to see how what the rate limiting is.
 
 
 These (quick examples):
@@ -49,7 +49,7 @@ $location = Location::locale('nl')->addressToCoordinates(['country' => 'Nederlan
 
 $location = Location::locale('nl')->postalcodeToCoordinates(['postal_code' => '1013 LV', 'street_number' => '25'])->coordinatesToAddress()->get();
 
-$location = Location::locale('nl')->ipToCoordinates()->coordinatesToAddress()->get(); // if IP resolves properly, which it mostly doesn't
+$location = Location::locale('nl')->ipToCoordinates('46.44.160.221')->coordinatesToAddress()->get(); // if IP resolves properly, which it mostly doesn't
 ```
 
 
