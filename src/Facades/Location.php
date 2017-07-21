@@ -1,6 +1,6 @@
 <?php
 
-namespace Noprotocol\LaravelLocation\Facades;
+namespace Thorazine\Location\Facades;
 
 use Illuminate\Support\Facades\Facade;
 

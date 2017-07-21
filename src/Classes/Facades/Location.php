@@ -1,8 +1,8 @@
 <?php
 
-namespace Noprotocol\LaravelLocation\Classes\Facades;
+namespace Thorazine\Location\Classes\Facades;
 
-use Noprotocol\LaravelLocation\Classes\Curl;
+use Thorazine\Location\Classes\Curl;
 use Exception;
 use StdClass;
 use Request;

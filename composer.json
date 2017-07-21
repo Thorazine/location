@@ -1,5 +1,5 @@
 {
-    "name": "thorazine/laravel-location",
+    "name": "thorazine/location",
     "description": "A location reverser for Laravel with Google API",
     "license": "MIT",
     "authors": [
@@ -10,7 +10,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "Thorazine\\LaravelLocation\\": "src/"
+            "Thorazine\\Location\\": "src/"
         }
     },
     "require": {}

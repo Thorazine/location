@@ -1,4 +1,4 @@
-# Laravel Location
+# Location reverser
 Get a complete location set from coordinates, address, postal code or IP. Through the Location Facade you can 
 request the Google and IpInfo API to return the address of a visitor on your website.
 This script works out of the box, no need for any keys or registrations.
@@ -11,32 +11,20 @@ margin for error. The Google API is quite accurate and does most of the heavy li
 don't use this data as fact but rather as indication.
 
 
-### PHP requirements:
-- PHP Curl
-
-
-### To do:
-- Create Guzzle client support switch
-
-
-### Why not yet:
-Guzzle continously changes it's workings. I haven't found the time yet.
-
-
 ## How to make it work
 Run:
 ```
-composer require noprotocol/laravel-location
+composer require thorazine/location
 ```
 
 Add to app/config => providers
 ```php
-Noprotocol\LaravelLocation\LocationServiceProvider::class,
+Thorazine\Location\LocationServiceProvider::class,
 ```
 
 Add to app/config => aliases
 ```php
-'Location' => Noprotocol\LaravelLocation\Facades\LocationFacade::class,
+'Location' => Thorazine\Location\Facades\LocationFacade::class,
 ```
 
 Get the configuration:
