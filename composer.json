@@ -1,0 +1,17 @@
+{
+    "name": "thorazine/laravel-location",
+    "description": "A location reverser for Laravel with Google API",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Matthijs Openneer",
+            "email": "noreply@matthijs.openneer.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Thorazine\\LaravelLocation\\": "src/"
+        }
+    },
+    "require": {}
+}
