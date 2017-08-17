@@ -39,6 +39,7 @@ GOOGLE_KEY=[key]
 
 > Script will work out of the box without a key, but it has limited requests. 
 > Please look at Google documentation to see how what the rate limiting is.
+> If you decide to add a key, you can request one [here](https://developers.google.com/maps/documentation/javascript/get-api-key)
 
 
 These (quick examples):
