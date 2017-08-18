@@ -37,6 +37,7 @@ class Location
 		'country' => '',
 		'region' => '',
 		'city' => '',
+		'iso' => '',
 		'street' => '',
 		'street_number' => '',
 		'postal_code' => '',
@@ -310,6 +311,7 @@ class Location
 
 			if(! $this->returnLocationData['country']) {
 				$this->returnLocationData['country'] = $this->findInGoogleSet($response, ['country']);
+				$this->returnLocationData['iso'] = $this->findInGoogleSet($response, ['country'], 'short_name');
 			}
 
 			if(! $this->returnLocationData['region']) {
@@ -352,13 +354,13 @@ class Location
 	 * @param array (attributes to find)
 	 * @return string
 	 */
-	private function findInGoogleSet($response, array $find = [])
+	private function findInGoogleSet($response, array $find = [], $type = 'long_name')
 	{
 		try {
 			foreach($response['results'][0]['address_components'] as $data) {
 				foreach($data['types'] as $key) {
 					if(in_array($key, $find)) {
-						return $data['long_name'];
+						return $data[$type];
 					}
 				}
 			}
