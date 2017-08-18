@@ -39,6 +39,7 @@ GOOGLE_KEY=[key]
 
 > Script will work out of the box without a key, but it has limited requests. 
 > Please look at Google documentation to see how what the rate limiting is.
+> If you decide to add a key, you can request one [here](https://developers.google.com/maps/documentation/javascript/get-api-key)
 
 
 These (quick examples):
@@ -118,4 +119,8 @@ google API. Please note that this is not the case with the ip request.
 ```php
 $location = Location::coordinatesToAddress(['latitude' => 52.385288, 'longitude' => 4.885361])->get();
 Location::response(); // results in raw api response
+<<<<<<< HEAD
 ```
+=======
+```
+>>>>>>> d34bacab544286ddaab039ec7ef277db8051b88c
