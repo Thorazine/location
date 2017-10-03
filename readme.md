@@ -16,7 +16,9 @@ Run:
 ```
 composer require thorazine/location
 ```
+That's it
 
+## If you are on Laravel < 5.5
 Add to app/config => providers
 ```php
 Thorazine\Location\LocationServiceProvider::class,
@@ -27,6 +29,7 @@ Add to app/config => aliases
 'Location' => Thorazine\Location\Facades\LocationFacade::class,
 ```
 
+## Other optional stuff
 Get the configuration:
 ```
 php artisan vendor:publish --tag=location
