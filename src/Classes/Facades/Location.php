@@ -10,7 +10,7 @@ use Request;
 use Log;
 use App;
 
-class Location 
+class Location
 {
 	/**
 	 * If there is an error it'll be in here
@@ -27,6 +27,11 @@ class Location
 	 * If there is an error it'll be in here
 	 */
 	private $locale = null;
+
+	/**
+	 * The iso's we allow to return
+	 */
+	private $isos = [];
 
 	/**
 	 * Default values
@@ -77,12 +82,18 @@ class Location
 		return $this;
 	}
 
+	public function countries(array $isos)
+	{
+		$this->urlVariables = array_merge($this->urlVariables, ['components' => 'country:'.implode(',', $isos)]);
+		return $this;
+	}
+
 	/**
 	 * Get the coordinates from a postal code
 	 *
 	 * @param string
 	 * @param string/integer
-	 * @return $this 
+	 * @return $this
 	 */
 	public function postalcodeToCoordinates($postalData)
 	{
@@ -101,7 +112,7 @@ class Location
 	 * Get coordinates from an address
 	 *
 	 * @param array
-	 * @return $this 
+	 * @return $this
 	 */
 	public function addressToCoordinates(array $address = [])
 	{
@@ -120,7 +131,7 @@ class Location
 	 * Get the address from coordinates
 	 *
 	 * @param array
-	 * @return $this 
+	 * @return $this
 	 */
 	public function coordinatesToAddress(array $coordinates = [])
 	{
@@ -171,7 +182,7 @@ class Location
 	 * Return the results
 	 */
 	public function get($toObject = false)
-	{		
+	{
 		if($this->error) {
 			Log::error('Could not get location. There was an error.', [
 	            'error' => $this->error,
@@ -226,7 +237,7 @@ class Location
 
 		return $result->getBody()->getContents();
 
-		
+
 	}
 
 	/**
@@ -250,7 +261,7 @@ class Location
 	 */
 	private function urlAddPostcode($postalCode)
 	{
-		$this->urlVariables = ['address' => $postalCode];
+		$this->urlVariables = array_merge($this->urlVariables, ['address' => $postalCode]);
 	}
 
 	/**
@@ -258,7 +269,7 @@ class Location
 	 */
 	private function urlAddAddress($address)
 	{
-		$this->urlVariables = ['address' => implode(' ', array_values($address))];
+		$this->urlVariables = array_merge($this->urlVariables, ['address' => implode(' ', array_values($address))]);
 	}
 
 	/**
@@ -267,13 +278,13 @@ class Location
 	private function urlAddCoordinates($coordinates)
 	{
 		if($coordinates) {
-			$this->urlVariables = ['latlng' => $coordinates['latitude'].','.$coordinates['longitude']];
+			$this->urlVariables = array_merge($this->urlVariables, ['latlng' => $coordinates['latitude'].','.$coordinates['longitude']]);
 		}
 		elseif($this->returnLocationData['latitude'] && $this->returnLocationData['longitude']) {
-			$this->urlVariables = ['latlng' => $this->returnLocationData['latitude'].','.$this->returnLocationData['longitude']];
+			$this->urlVariables = array_merge($this->urlVariables, ['latlng' => $this->returnLocationData['latitude'].','.$this->returnLocationData['longitude']]);
 		}
 		else {
-			throw new Exception('No coordinates supplied');
+			throw new Exception('No coordinates could be found');
 		}
 	}
 
@@ -288,26 +299,30 @@ class Location
 
 		foreach($this->urlVariables as $variable => $value) {
 			if(! $variables) {
-				$variables .= '?'.$variable.'='.urlencode($value);
+				$variables .= '?'.$variable.'='.($value);
 			}
 			else {
-				$variables .= '&'.$variable.'='.urlencode($value);
+				$variables .= '&'.$variable.'='.($value);
 			}
 		}
 
+		// dd($variables);
 		return config('location.google-request-url').$variables;
 	}
 
 	/**
 	 * fill the response with usefull data as far as we can find
 	 */
-	private function updateResponseWithResults($json) 
+	private function updateResponseWithResults($json)
 	{
 		$response = $this->jsonToArray($json);
 
 		if(isset($response['results'][0])) {
-
 			$this->response = $response['results'][0];
+
+			if(@$response['results'][0]['partial_match']) {
+				throw new Exception("Could not find complete address");
+			}
 
 			if(! $this->returnLocationData['country']) {
 				$this->returnLocationData['country'] = $this->findInGoogleSet($response, ['country']);
@@ -317,27 +332,27 @@ class Location
 			if(! $this->returnLocationData['region']) {
 				$this->returnLocationData['region'] = $this->findInGoogleSet($response, ['administrative_area_level_1']);
 			}
-			
+
 			if(! $this->returnLocationData['city']) {
 				$this->returnLocationData['city'] = $this->findInGoogleSet($response, ['administrative_area_level_2']);
 			}
-			
+
 			if(! $this->returnLocationData['street']) {
 				$this->returnLocationData['street'] = $this->findInGoogleSet($response, ['route']);
 			}
-			
+
 			if(! $this->returnLocationData['street_number']) {
 				$this->returnLocationData['street_number'] = $this->findInGoogleSet($response, ['street_number']);
 			}
-			
+
 			if(! $this->returnLocationData['postal_code']) {
 				$this->returnLocationData['postal_code'] = $this->findInGoogleSet($response, ['postal_code']);
 			}
-			
+
 			if(! $this->returnLocationData['latitude']) {
 				$this->returnLocationData['latitude'] = $response['results'][0]['geometry']['location']['lat'];
 			}
-			
+
 			if(! $this->returnLocationData['longitude']) {
 				$this->returnLocationData['longitude'] = $response['results'][0]['geometry']['location']['lng'];
 			}
@@ -370,7 +385,7 @@ class Location
 			$this->error = $e;
 			return '';
 		}
-		
+
 	}
 
 
@@ -405,7 +420,7 @@ class Location
 
 	/**
 	 * Create a client
-	 * 
+	 *
 	 * @return void
 	 */
 	private function createClient()
