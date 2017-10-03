@@ -70,7 +70,7 @@ To return it as object set the ```get()``` function to true: ```get(true)```
 
 
 ## Limit results by country
-To limit results to only be included when from a country, use the ```countries()``` function.
+To limit the search results to only be included when from a set of predefined countries, use the ```countries()``` function.
 It accepts iso notation country names as defined by "ISO 3166-1 alpha-2".
 
 
@@ -88,8 +88,8 @@ catch(Exception $e) {
 }
 ```
 
-The result is the default template and starts out as empty and gets filled throught the call. So if no data is available
-the result for that entry will be "". After every call the script resets to it's initial settings.
+The result is the default template and starts out as empty and gets filled throughout the call. So if no data is available
+the result for that entry will be "". After every call the script resets to it's initial template.
 
 
 ## Chainable functions and their variables
@@ -119,7 +119,7 @@ the result for that entry will be "". After every call the script resets to it's
 
 
 ## Debug
-With the try catch you can alreay see what you need. But besides this there is also a cached result of the raw response from the
+With the try catch you can already see what you need. But besides this there is also a cached result of the raw response from the
 google API. Please note that this is not the case with the ip request.
 
 ```php
