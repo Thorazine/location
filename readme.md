@@ -1,5 +1,5 @@
 # Location reverser
-Get a complete location set from coordinates, address, postal code or IP. Through the Location Facade you can 
+Get a complete location set from coordinates, address, postal code or IP. Through the Location Facade you can
 request the Google and IpInfo API to return the address of a visitor on your website.
 This script works out of the box, no need for any keys or registrations.
 
@@ -37,7 +37,7 @@ If you have a Google key add a line to your .env file:
 GOOGLE_KEY=[key]
 ```
 
-> Script will work out of the box without a key, but it has limited requests. 
+> Script will work out of the box without a key, but it has limited requests.
 > Please look at Google documentation to see how what the rate limiting is.
 > If you decide to add a key, you can request one [here](https://developers.google.com/maps/documentation/javascript/get-api-key)
 
@@ -69,6 +69,11 @@ $location['postal_code'] = '1013 LV';
 To return it as object set the ```get()``` function to true: ```get(true)```
 
 
+## Limit results by country
+To limit results to only be included when from a country, use the ```countries()``` function.
+It accepts iso notation country names as defined by "ISO 3166-1 alpha-2".
+
+
 ## Extended example:
 ```php
 try {
@@ -83,7 +88,7 @@ catch(Exception $e) {
 }
 ```
 
-The result is the default template and starts out as empty and gets filled throught the call. So if no data is available 
+The result is the default template and starts out as empty and gets filled throught the call. So if no data is available
 the result for that entry will be "". After every call the script resets to it's initial settings.
 
 
@@ -91,6 +96,7 @@ the result for that entry will be "". After every call the script resets to it's
 
 | Functions 					| Values		| Validation	| Type
 |-------------------------------|---------------|---------------|---------
+| countries()	 				| iso's 		| required		| array
 | coordinatesToAddress()		| latitude		| required		| float
 |								| longitude		| required		| float
 | addressToCoordinates()		| country		| recommended	| string
@@ -113,14 +119,10 @@ the result for that entry will be "". After every call the script resets to it's
 
 
 ## Debug
-With the try catch you can alreay see what you need. But besides this there is also a cached result of the raw response from the 
+With the try catch you can alreay see what you need. But besides this there is also a cached result of the raw response from the
 google API. Please note that this is not the case with the ip request.
 
 ```php
 $location = Location::coordinatesToAddress(['latitude' => 52.385288, 'longitude' => 4.885361])->get();
 Location::response(); // results in raw api response
-<<<<<<< HEAD
 ```
-=======
-```
->>>>>>> d34bacab544286ddaab039ec7ef277db8051b88c
