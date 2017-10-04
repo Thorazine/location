@@ -65,6 +65,7 @@ Will all result in:
 ```php
 $location['latitude'] = 52.385288,
 $location['longitude'] = 4.885361;
+$location['iso'] = 'NL';
 $location['country'] = 'Nederland';
 $location['region'] = 'Noord-Holland';
 $location['city'] = 'Amsterdam';
