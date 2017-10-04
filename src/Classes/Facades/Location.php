@@ -53,10 +53,10 @@ class Location
 	private $locationDataTemplate = [
 		'latitude' => '',
 		'longitude' => '',
+		'iso' => '',
 		'country' => '',
 		'region' => '',
 		'city' => '',
-		'iso' => '',
 		'street' => '',
 		'street_number' => '',
 		'postal_code' => '',
