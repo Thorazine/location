@@ -1,4 +1,4 @@
-# Geo data to Geo location
+# Geo data to Geolocation
 Get a complete standardized location php array or object from coordinates, address, postal code or IP. Through the Location Facade you can
 request the Google and IpInfo API to return the address of a visitor on your website.
 This script works out of the box, no need for any keys or registrations.
