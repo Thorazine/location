@@ -15,28 +15,42 @@ class Location
 	/**
 	 * If there is an error it'll be in here
 	 */
-	private $error = null;
+	private $error = NULL;
 
 	/**
 	 * The complete response will be given here (array)
 	 */
-	private $response = null;
-
+	private $response = NULL;
 
 	/**
 	 * If there is an error it'll be in here
 	 */
-	private $locale = null;
+	private $locale = NULL;
 
 	/**
-	 * The iso's we allow to return
+	 *
 	 */
-	private $isos = [];
+	private $ip = NULL;
 
 	/**
-	 * Default values
+	 * all included country iso's
 	 */
-	private $locationData = [
+	private $isos = NULL;
+
+	/**
+	 * The array that holds the data
+	 */
+	private $returnLocationData = [];
+
+	/**
+	 * Hold the guzzle client
+	 */
+	private $client;
+
+	/**
+	 * Default template
+	 */
+	private $locationDataTemplate = [
 		'latitude' => '',
 		'longitude' => '',
 		'country' => '',
@@ -49,42 +63,30 @@ class Location
 	];
 
 	/**
-	 * Url variables
+	 * flag to see if we need to follow up and get the address
 	 */
-	private $urlVariables = [];
-
-	/**
-	 * The array that holds the data
-	 */
-	private $returnLocationData = [];
-
-	/**
-	 * Hold the guzzle client
-	 */
-	private $client;
-
+	private $shouldRunC2A = false;
 
 	/**
 	 * Constructor
 	 */
 	public function __construct()
 	{
-		$this->returnLocationData = $this->locationData;
+		$this->reset();
 	}
 
 	/**
-	 * Set the locale in. ISO (nl, nl_NL, en, en_GB, etc.)
+	 * Set the locale in. ISO (nl, nl-NL, en, en-GB, etc.)
 	 */
 	public function locale($locale)
 	{
 		$this->locale = $locale;
-
 		return $this;
 	}
 
 	public function countries(array $isos)
 	{
-		$this->urlVariables = array_merge($this->urlVariables, ['components' => 'country:'.implode(',', $isos)]);
+		$this->isos = $isos;
 		return $this;
 	}
 
@@ -95,16 +97,11 @@ class Location
 	 * @param string/integer
 	 * @return $this
 	 */
-	public function postalcodeToCoordinates($postalData)
+	public function postalcodeToCoordinates(array $postalData, $shouldRunC2A = false)
 	{
-		$this->reset();
+		$this->shouldRunC2A = ($this->shouldRunC2A) ? true : $shouldRunC2A;
 
-		$this->returnLocationData = array_merge($this->returnLocationData, ['postal_code' => $postalData['postal_code'], 'street_number' => @$postalData['street_number']]);
-
-		$this->urlAddPostcode(str_replace(' ', '', $postalData['postal_code']));
-
-		$this->updateResponseWithResults($this->gateway($this->buildUrl()));
-
+		$this->returnLocationData = array_merge($this->returnLocationData, array_only($postalData, ['street_number', 'postal_code']));
 		return $this;
 	}
 
@@ -114,16 +111,9 @@ class Location
 	 * @param array
 	 * @return $this
 	 */
-	public function addressToCoordinates(array $address = [])
+	public function addressToCoordinates(array $addressData = [])
 	{
-		$this->reset();
-
-		$this->returnLocationData = array_merge($this->returnLocationData, $address);
-
-		$this->urlAddAddress($address);
-
-		$this->updateResponseWithResults($this->gateway($this->buildUrl()));
-
+		$this->returnLocationData = array_merge($this->returnLocationData, array_only($addressData, ['country', 'region', 'city', 'street', 'street_number']));
 		return $this;
 	}
 
@@ -135,14 +125,9 @@ class Location
 	 */
 	public function coordinatesToAddress(array $coordinates = [])
 	{
-		$this->reset();
+		$this->shouldRunC2A = true;
 
-		$this->returnLocationData = array_merge($this->returnLocationData, $coordinates);
-
-		$this->urlAddCoordinates($coordinates);
-
-		$this->updateResponseWithResults($this->gateway($this->buildUrl()));
-
+		$this->returnLocationData = array_merge($this->returnLocationData, array_only($coordinates, ['latitude', 'longitude']));
 		return $this;
 	}
 
@@ -152,67 +137,45 @@ class Location
 	 * @param string (ip)
 	 * @return $this
 	 */
-	public function ipToCoordinates($ip = null)
+	public function ipToCoordinates($ip = null, $shouldRunC2A = false)
 	{
+		$this->shouldRunC2A = ($this->shouldRunC2A) ? true : $shouldRunC2A;
+
 		if(! $ip) {
 			$ip = Request::ip();
 		}
-
-		$this->url = 'http://ipinfo.io/'.$ip.'/geo';
-
-		if(in_array($ip, config('location.ip-exceptions'))) {
-			$this->returnLocationData = array_merge($this->returnLocationData, config('location.default-template-localhost'));
-		}
-		else {
-			$client = $this->createClient();
-
-			$response = $this->jsonToArray($this->gateway($this->url));
-
-			list($latitude, $longitude) = explode(',', $response['loc']);
-
-			$this->returnLocationData['latitude'] = $latitude;
-			$this->returnLocationData['longitude'] = $longitude;
-		}
+		$this->ip = $ip;
 
 		return $this;
 	}
-
 
 	/**
 	 * Return the results
 	 */
 	public function get($toObject = false)
 	{
-		if($this->error) {
-			Log::error('Could not get location. There was an error.', [
-	            'error' => $this->error,
-	        ]);
+		$this->response = null;
+		$this->error = null;
+
+		if($this->c2a()) {
+			$response = $this->template($toObject);
+		}
+		elseif($this->a2c()) {
+			$response = $this->template($toObject);
+		}
+		elseif($this->i2c()) {
+			$response = $this->template($toObject);
+		}
+		elseif($this->p2c()) {
+			$response = $this->template($toObject);
 		}
 
-		if($toObject) {
-			$response = new StdClass;
-
-			foreach($this->returnLocationData as $key => $value) {
-				$response->{$key} = $value;
-			}
-		}
-		else {
-			$response = $this->returnLocationData;
+		if($response) {
+			$this->reset();
+			return $response;
 		}
 
-		$this->locale = null;
-		$this->urlVariables = [];
-		$this->returnLocationData = $this->locationData;
-
-		return $response;
-	}
-
-	/**
-	 * Returns the error variable
-	 */
-	public function error()
-	{
-		return $this->error;
+		throw new Exception(trans('location::errors.not_enough_data'));
 	}
 
 	/**
@@ -224,6 +187,159 @@ class Location
 	}
 
 	/**
+	 * Return the template as array or object
+	 *
+	 * @param  bool $toObject
+	 * @return mixed
+	 */
+	private function template($toObject)
+	{
+		if($toObject) {
+			$response = new StdClass;
+
+			foreach($this->returnLocationData as $key => $value) {
+				$response->{$key} = $value;
+			}
+			return $response;
+		}
+		return $this->returnLocationData;
+	}
+
+	/**
+	 * postal code to coordinate
+	 *
+	 * @return bool
+	 */
+	private function p2c()
+	{
+		if($this->returnLocationData['postal_code'] && ! $this->returnLocationData['latitude']) {
+			$this->updateResponseWithResults($this->gateway($this->createUrl()));
+
+			if($this->shouldRunC2A) {
+				$this->c2a();
+			}
+
+			return true;
+		}
+	}
+
+	/**
+	 * address to coordinates
+	 *
+	 * @return bool
+	 */
+	private function a2c()
+	{
+		if($this->returnLocationData['city'] && ! $this->returnLocationData['latitude']) {
+			$this->updateResponseWithResults($this->gateway($this->createUrl()));
+
+			if($this->shouldRunC2A) {
+				$this->c2a();
+			}
+
+			return true;
+		}
+	}
+
+	/**
+	 * ip to coordinates
+	 *
+	 * @return bool
+	 */
+	private function i2c()
+	{
+		if($this->ip && ! $this->returnLocationData['latitude']) {
+
+			$url = 'http://ipinfo.io/'.$this->ip.'/geo';
+
+			if(in_array($this->ip, config('location.ip-exceptions'))) {
+				$this->returnLocationData = array_merge($this->returnLocationData, config('location.default-template-localhost'));
+			}
+			else {
+				$client = $this->createClient();
+
+				$response = $this->jsonToArray($this->gateway($url));
+
+				list($latitude, $longitude) = explode(',', $response['loc']);
+
+				$this->returnLocationData['latitude'] = $latitude;
+				$this->returnLocationData['longitude'] = $longitude;
+			}
+
+			if($this->shouldRunC2A) {
+				$this->c2a();
+			}
+
+			return true;
+		}
+	}
+
+	/**
+	 * coordinates to address
+	 *
+	 * @return bool
+	 */
+	private function c2a()
+	{
+		if($this->returnLocationData['latitude'] && $this->returnLocationData['longitude']) {
+			$this->updateResponseWithResults($this->gateway($this->createUrl()));
+			return true;
+		}
+	}
+
+	/**
+	 * create the url to connect to
+	 *
+	 * @return string Url
+	 */
+	private function createUrl()
+	{
+		$urlVariables = [
+			'language' => $this->locale,
+		];
+
+		if(count($this->isos)) {
+			$urlVariables['components'] = 'country:'.implode(',', $this->isos);
+		}
+
+		// if true it will always be the final stage in getting the address
+		if($this->returnLocationData['latitude'] && $this->returnLocationData['longitude']) {
+			$urlVariables['latlng'] = $this->returnLocationData['latitude'].','.$this->returnLocationData['longitude'];
+			return $this->buildUrl($urlVariables);
+		}
+
+		if($this->returnLocationData['city'] && $this->returnLocationData['country']) {
+			$urlVariables['address'] = $this->returnLocationData['city'].', '.$this->returnLocationData['country'];
+			return $this->buildUrl($urlVariables);
+		}
+
+		if($this->returnLocationData['postal_code']) {
+			$urlVariables['address'] = $this->returnLocationData['postal_code'].(($this->returnLocationData['street_number']) ? ' '.$this->returnLocationData['street_number'] : '');
+			return $this->buildUrl($urlVariables);
+		}
+
+
+	}
+
+	/**
+	 * Build the request url
+	 */
+	private function buildUrl($urlVariables)
+	{
+		$url = '';
+
+		foreach($urlVariables as $variable => $value) {
+			if(! $url) {
+				$url .= '?'.$variable.'='.($value);
+			}
+			else {
+				$url .= '&'.$variable.'='.($value);
+			}
+		}
+		return config('location.google-request-url').$url;
+	}
+
+	/**
 	 * Get the data from the gateway
 	 * New gateways (like Guzzle) can be added here and can be chosen from the config
 	 */
@@ -232,82 +348,12 @@ class Location
 		$result = $this->createClient()->get($url);
 
 		if($result->getStatusCode() != 200) {
-			throw new Exception('Could not connect');
+			throw new Exception(trans('location::errors.no_connect'));
 		}
 
-		return $result->getBody()->getContents();
+		$this->response = $result->getBody()->getContents();
 
-
-	}
-
-	/**
-	 * Add the locale to the request
-	 */
-	private function addLanguage()
-	{
-		if($this->locale) {
-			$this->urlVariables = array_merge($this->urlVariables, ['language' => $this->locale]);
-		}
-		elseif(config('location.language')) {
-			$this->urlVariables = array_merge($this->urlVariables, ['language' => config('location.language')]);
-		}
-		else {
-			$this->urlVariables = array_merge($this->urlVariables, ['language' => App::getLocale()]);
-		}
-	}
-
-	/**
-	 * Add the request variables for the postal code request
-	 */
-	private function urlAddPostcode($postalCode)
-	{
-		$this->urlVariables = array_merge($this->urlVariables, ['address' => $postalCode]);
-	}
-
-	/**
-	 * Add the request variables for the address request
-	 */
-	private function urlAddAddress($address)
-	{
-		$this->urlVariables = array_merge($this->urlVariables, ['address' => implode(' ', array_values($address))]);
-	}
-
-	/**
-	 * Add the request variables for the coordinates request
-	 */
-	private function urlAddCoordinates($coordinates)
-	{
-		if($coordinates) {
-			$this->urlVariables = array_merge($this->urlVariables, ['latlng' => $coordinates['latitude'].','.$coordinates['longitude']]);
-		}
-		elseif($this->returnLocationData['latitude'] && $this->returnLocationData['longitude']) {
-			$this->urlVariables = array_merge($this->urlVariables, ['latlng' => $this->returnLocationData['latitude'].','.$this->returnLocationData['longitude']]);
-		}
-		else {
-			throw new Exception('No coordinates could be found');
-		}
-	}
-
-	/**
-	 * Build the request url
-	 */
-	private function buildUrl()
-	{
-		$this->addLanguage();
-
-		$variables = '';
-
-		foreach($this->urlVariables as $variable => $value) {
-			if(! $variables) {
-				$variables .= '?'.$variable.'='.($value);
-			}
-			else {
-				$variables .= '&'.$variable.'='.($value);
-			}
-		}
-
-		// dd($variables);
-		return config('location.google-request-url').$variables;
+		return $this->response;
 	}
 
 	/**
@@ -321,7 +367,7 @@ class Location
 			$this->response = $response['results'][0];
 
 			if(@$response['results'][0]['partial_match']) {
-				throw new Exception("Could not find complete address");
+				throw new Exception(trans('location::errors.no_results'));
 			}
 
 			if(! $this->returnLocationData['country']) {
@@ -358,7 +404,7 @@ class Location
 			}
 		}
 		else {
-			$this->error = 'No results';
+			throw new Exception(trans('location::errors.no_results'));
 		}
 	}
 
@@ -412,12 +458,6 @@ class Location
 		}
 	}
 
-	private function reset()
-	{
-		$this->error = null;
-		$this->response = null;
-	}
-
 	/**
 	 * Create a client
 	 *
@@ -427,4 +467,18 @@ class Location
 	{
 		return new Client();
 	}
+
+	/**
+	 * Reset the class
+	 *
+	 * @return void
+	 */
+	private function reset()
+	{
+		$this->returnLocationData = $this->locationDataTemplate;
+		$this->locale = (config('location.language')) ? config('location.language') : App::getLocale();
+		$this->ip = null;
+		$this->client = null;
+	}
+
 }

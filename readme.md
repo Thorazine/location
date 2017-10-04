@@ -1,12 +1,12 @@
-# Location reverser
-Get a complete location set from coordinates, address, postal code or IP. Through the Location Facade you can
+# Geo data to Geo location
+Get a complete standardized location php array or object from coordinates, address, postal code or IP. Through the Location Facade you can
 request the Google and IpInfo API to return the address of a visitor on your website.
 This script works out of the box, no need for any keys or registrations.
 
 
 ## What you should keep in mind
 
-This script uses the Google an IpInfo API to request information. Especially with the Ip API there is
+This script uses the Google an IpInfo API to request information. Especially with the IP API there is
 margin for error. The Google API is quite accurate and does most of the heavy lifting. However, please
 don't use this data as fact but rather as indication.
 
@@ -53,7 +53,11 @@ $location = Location::locale('nl')->addressToCoordinates(['country' => 'Nederlan
 
 $location = Location::locale('nl')->postalcodeToCoordinates(['postal_code' => '1013 LV', 'street_number' => '25'])->coordinatesToAddress()->get();
 
+$location = Location::locale('nl')->postalcodeToCoordinates(['postal_code' => '1013 LV', 'street_number' => '25'], true)->get();
+
 $location = Location::locale('nl')->ipToCoordinates('46.44.160.221')->coordinatesToAddress()->get(); // if IP resolves properly, which it mostly doesn't
+
+$location = Location::locale('nl')->ipToCoordinates('46.44.160.221', true)->get(); // if IP resolves properly, which it mostly doesn't
 ```
 
 
@@ -104,9 +108,9 @@ the result for that entry will be "". After every call the script resets to it's
 |								| longitude		| required		| float
 | addressToCoordinates()		| country		| recommended	| string
 |								| region		| 				| string
-|								| city			| recommended	| string
-|								| street 		| required		| string
-|								| street_number	| required		| string
+|								| city			| required		| string
+|								| street 		| recommended	| string
+|								| street_number	| recommended	| string
 | postalcodeToCoordinates()		| postal_code	| required		| string
 |								| street_number	| recommended	| string
 | get()							| true/false	| boolean		| boolean

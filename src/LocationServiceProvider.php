@@ -18,6 +18,8 @@ class LocationServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/config/location.php' => config_path('location.php'),
         ], 'location');
+
+        $this->loadTranslationsFrom(__DIR__.'/resources/lang', 'location');
     }
 
     /**
