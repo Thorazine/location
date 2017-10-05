@@ -14,11 +14,9 @@ don't use this data as fact but rather as indication.
 ## How to make it work
 Run:
 ```
-composer require thorazine/location
+composer require thorazine/location:~1.0
 ```
-That's it
 
-## If you are on Laravel < 5.5
 Add to app/config => providers
 ```php
 Thorazine\Location\LocationServiceProvider::class,
