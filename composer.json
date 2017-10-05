@@ -15,15 +15,5 @@
     },
     "require": {
         "guzzlehttp/guzzle": "^6.0"
-    },
-    "extra": {
-        "laravel": {
-            "providers": [
-                "Thorazine\\Location\\LocationServiceProvider"
-            ],
-            "aliases": {
-                "Location": "Thorazine\\Location\\Facades\\LocationFacade"
-            }
-        }
     }
 }
