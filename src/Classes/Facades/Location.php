@@ -160,6 +160,10 @@ class Location
 	 */
 	public function get($toObject = false)
 	{
+        if(!env('GOOGLE_KEY')) {
+            throw new Exception("Need an env key for geo request", 401);
+        }
+
 		$this->response = null;
 		$this->error = null;
 
@@ -257,10 +261,6 @@ class Location
 	private function i2c()
 	{
 		if($this->ip && ! $this->returnLocationData['latitude']) {
-
-            if(!env('GOOGLE_KEY')) {
-                throw new Exception("Need an env key for geo request", 401);
-            }
 
             $this->method = 'POST';
 
