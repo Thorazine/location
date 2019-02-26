@@ -18,6 +18,11 @@ class Location
 	private $error = NULL;
 
 	/**
+	 *
+	 */
+	private $excludePartials = false;
+
+	/**
 	 * The complete response will be given here (array)
 	 */
 	private $response = NULL;
@@ -93,6 +98,17 @@ class Location
 	public function countries(array $isos)
 	{
 		$this->isos = $isos;
+		return $this;
+	}
+
+	/**
+	 * Show result only if dataset is complete
+	 *
+	 * @return $this
+	 */
+	public function excludePartials()
+	{
+		$this->excludePartials = true;
 		return $this;
 	}
 
@@ -377,7 +393,7 @@ class Location
 		if(isset($response['results'][0])) {
 			$this->response = $response['results'][0];
 
-			if(@$response['results'][0]['partial_match']) {
+			if(@$response['results'][0]['partial_match'] && $this->excludePartials) {
 				throw new Exception(trans('location::errors.no_results'));
 			}
 

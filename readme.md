@@ -19,15 +19,7 @@ composer require thorazine/location
 That's it
 
 ## If you are on Laravel < 5.5
-Add to app/config => providers
-```php
-Thorazine\Location\LocationServiceProvider::class,
-```
-
-Add to app/config => aliases
-```php
-'Location' => Thorazine\Location\Facades\LocationFacade::class,
-```
+You can't use this version. Please go to the [pre55 branch](https://github.com/Thorazine/location/tree/pre55)
 
 ## Other optional stuff
 Get the configuration:
