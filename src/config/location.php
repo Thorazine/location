@@ -25,10 +25,18 @@ return [
 
 
 	/*
-	 * Set the url to request
+	 * Set the url to request for address calls
 	 *
 	 */
-	'google-request-url' => 'https://maps.google.com/maps/api/geocode/json',
+	'google-maps-url' => 'https://maps.googleapis.com/maps/api/geocode/json?key=',
+
+
+    /*
+     * Set the url to request for geolocation calls
+     *
+     */
+    'google-geo-url' => 'https://www.googleapis.com/geolocation/v1/geolocate?key=',
+
 
 
 	/*
@@ -43,7 +51,7 @@ return [
 	 *
 	 */
 	'ip-exceptions' => [
-		'::1', 
+		'::1',
 		'127.0.0.1'
 	],
 

@@ -35,7 +35,7 @@ class Location
 	/**
 	 * all included country iso's
 	 */
-	private $isos = NULL;
+	private $isos = [];
 
 	/**
 	 * The array that holds the data
@@ -46,6 +46,12 @@ class Location
 	 * Hold the guzzle client
 	 */
 	private $client;
+
+    /**
+     * The method for request (GET|POST)
+     * @var string
+     */
+    private $method = 'GET';
 
 	/**
 	 * Default template
@@ -213,7 +219,8 @@ class Location
 	private function p2c()
 	{
 		if($this->returnLocationData['postal_code'] && ! $this->returnLocationData['latitude']) {
-			$this->updateResponseWithResults($this->gateway($this->createUrl()));
+            $this->method = 'GET';
+			$this->updateResponseWithResults($this->gateway($this->createAddressUrl()));
 
 			if($this->shouldRunC2A) {
 				$this->c2a();
@@ -231,7 +238,8 @@ class Location
 	private function a2c()
 	{
 		if($this->returnLocationData['city'] && ! $this->returnLocationData['latitude']) {
-			$this->updateResponseWithResults($this->gateway($this->createUrl()));
+            $this->method = 'GET';
+			$this->updateResponseWithResults($this->gateway($this->createAddressUrl()));
 
 			if($this->shouldRunC2A) {
 				$this->c2a();
@@ -250,21 +258,13 @@ class Location
 	{
 		if($this->ip && ! $this->returnLocationData['latitude']) {
 
-			$url = 'http://ipinfo.io/'.$this->ip.'/geo';
+            if(!env('GOOGLE_KEY')) {
+                throw new Exception("Need an env key for geo request", 401);
+            }
 
-			if(in_array($this->ip, config('location.ip-exceptions'))) {
-				$this->returnLocationData = array_merge($this->returnLocationData, config('location.default-template-localhost'));
-			}
-			else {
-				$client = $this->createClient();
+            $this->method = 'POST';
 
-				$response = $this->jsonToArray($this->gateway($url));
-
-				list($latitude, $longitude) = explode(',', $response['loc']);
-
-				$this->returnLocationData['latitude'] = $latitude;
-				$this->returnLocationData['longitude'] = $longitude;
-			}
+			$this->updateResponseWithResults($this->gateway($this->createGeoUrl()));
 
 			if($this->shouldRunC2A) {
 				$this->c2a();
@@ -282,17 +282,28 @@ class Location
 	private function c2a()
 	{
 		if($this->returnLocationData['latitude'] && $this->returnLocationData['longitude']) {
-			$this->updateResponseWithResults($this->gateway($this->createUrl()));
+            $this->method = 'GET';
+			$this->updateResponseWithResults($this->gateway($this->createAddressUrl()));
 			return true;
 		}
 	}
 
+    /**
+     * create the url to connect to for geo location
+     *
+     * @return string Url
+     */
+    private function createGeoUrl()
+    {
+        return config('location.google-geo-url').env('GOOGLE_KEY');
+    }
+
 	/**
-	 * create the url to connect to
+	 * create the url to connect to for maps api
 	 *
 	 * @return string Url
 	 */
-	private function createUrl()
+	private function createAddressUrl()
 	{
 		$urlVariables = [
 			'language' => $this->locale,
@@ -329,14 +340,9 @@ class Location
 		$url = '';
 
 		foreach($urlVariables as $variable => $value) {
-			if(! $url) {
-				$url .= '?'.$variable.'='.($value);
-			}
-			else {
-				$url .= '&'.$variable.'='.($value);
-			}
+			$url .= '&'.$variable.'='.($value);
 		}
-		return config('location.google-request-url').$url;
+		return config('location.google-maps-url').env('GOOGLE_KEY').$url;
 	}
 
 	/**
@@ -345,7 +351,12 @@ class Location
 	 */
 	private function gateway($url)
 	{
-		$result = $this->createClient()->get($url);
+        if($this->method == 'POST') {
+            $result = $this->createClient()->post($url);
+        }
+        else {
+            $result = $this->createClient()->get($url);
+        }
 
 		if($result->getStatusCode() != 200) {
 			throw new Exception(trans('location::errors.no_connect'));
@@ -403,6 +414,10 @@ class Location
 				$this->returnLocationData['longitude'] = $response['results'][0]['geometry']['location']['lng'];
 			}
 		}
+        elseif(@$response['location']) {
+            $this->returnLocationData['latitude'] = $response['location']['lat'];
+            $this->returnLocationData['longitude'] = $response['location']['lng'];
+        }
 		else {
 			throw new Exception(trans('location::errors.no_results'));
 		}
