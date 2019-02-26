@@ -6,8 +6,8 @@ This script works out of the box, no need for any keys or registrations.
 
 ## What you should keep in mind
 
-This script uses the Google an IpInfo API to request information. Especially with the IP API there is
-margin for error. The Google API is quite accurate and does most of the heavy lifting. However, please
+This script uses the Google geodata and maps API to request information. Especially with the IP API there is
+margin for error. The Google API is quite accurate. However, please
 don't use this data as fact but rather as indication.
 
 
@@ -40,9 +40,9 @@ If you have a Google key add a line to your .env file:
 GOOGLE_KEY=[key]
 ```
 
-> Script will work out of the box without a key, but it has limited requests.
-> Please look at Google documentation to see how what the rate limiting is.
-> If you decide to add a key, you can request one [here](https://developers.google.com/maps/documentation/javascript/get-api-key)
+> This script used to work out of the box without a key, but it doesn't anymore. Thanks Google.
+> You can request one [here](https://developers.google.com/maps/documentation/geocoding/get-api-key)
+> Do make sure it has sufficiant rights.
 
 
 These (quick examples):
