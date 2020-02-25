@@ -1,3 +1,10 @@
+<p align="center">
+<a href="https://packagist.org/packages/thorazine/location"><img src="https://poser.pugx.org/thorazine/location/d/total.svg" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/thorazine/location"><img src="https://poser.pugx.org/thorazine/location/v/stable.svg" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/thorazine/location"><img src="https://poser.pugx.org/thorazine/location/license.svg" alt="License"></a>
+</p>
+
+
 # Geo data to Geolocation
 Get a complete standardized location php array or object from coordinates, address, postal code or IP. Through the Location Facade you can
 request the Google and IpInfo API to return the address of a visitor on your website.
