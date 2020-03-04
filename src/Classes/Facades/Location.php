@@ -434,6 +434,9 @@ class Location
             $this->returnLocationData['latitude'] = $response['location']['lat'];
             $this->returnLocationData['longitude'] = $response['location']['lng'];
         }
+        elseif(@$response['error_message']) {
+        	throw new Exception($response['error_message']);
+        }
 		else {
 			throw new Exception(trans('location::errors.no_results'));
 		}
