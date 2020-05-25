@@ -335,6 +335,11 @@ class Location
 			return $this->buildUrl($urlVariables);
 		}
 
+		if($this->returnLocationData['city'] && $this->returnLocationData['country'] && $this->returnLocationData['street']) {
+			$urlVariables['address'] = $this->returnLocationData['street'].' '.$this->returnLocationData['street_number'].','.$this->returnLocationData['city'].' '.$this->returnLocationData['country'];
+			return $this->buildUrl($urlVariables);
+		}
+
 		if($this->returnLocationData['city'] && $this->returnLocationData['country']) {
 			$urlVariables['address'] = $this->returnLocationData['city'].', '.$this->returnLocationData['country'];
 			return $this->buildUrl($urlVariables);
